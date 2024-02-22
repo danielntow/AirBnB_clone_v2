@@ -7,9 +7,9 @@ from fabric.api import put, run, env
 from os.path import exists
 from datetime import datetime
 
-env.hosts = ['<IP web-01>', '<IP web-02>']
+env.hosts = ['100.26.226.113', '34.234.193.247']
 env.user = 'ubuntu'
-env.key_filename = 'private_key.pem'  # Replace with your private key filename
+env.key_filename = 'private_key.pem'
 
 
 def do_deploy(archive_path):
@@ -49,8 +49,3 @@ def do_deploy(archive_path):
     except Exception as e:
         print("Error: {}".format(e))
         return False
-
-
-archive_path = "web_static_{}.tgz".format(
-    datetime.now().strftime("%Y%m%d%H%M%S"))
-do_deploy(archive_path)
