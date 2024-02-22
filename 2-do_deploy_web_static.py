@@ -3,42 +3,47 @@
 from fabric.api import env, put, run
 from os import path
 
-env.hosts = ['3.90.70.66', '100.26.231.45']
+env.hosts = ['100.26.226.113', '35.175.130.55']
 env.user = 'ubuntu'
 env.key_filename = '~/.ssh/school'
 
 
 def do_deploy(archive_path):
-    """Deploy web files to server
-    """
+    """Deploy web files to server"""
     try:
-        if not (path.exists(archive_path)):
+        if not path.exists(archive_path):
             return False
 
+        # Extracting timestamp from the archive filename
+        timestamp = archive_path.split('_')[-1][:-4]
+
+        # Uploading the archive to /tmp/ directory on the server
         put(archive_path, '/tmp/')
 
-        timestamp = archive_path[-18:-4]
-        run('sudo mkdir -p /data/web_static/\
-releases/web_static_{}/'.format(timestamp))
+        # Creating the necessary directories
+        run('sudo mkdir -p /data/web_static/releases/web_static_{}/'.format(timestamp))
 
-        run('sudo tar -xzf /tmp/web_static_{}.tgz -C \
-/data/web_static/releases/web_static_{}/'
+        # Extracting the contents of the archive
+        run('sudo tar -xzf /tmp/web_static_{}.tgz -C /data/web_static/releases/web_static_{}/'
             .format(timestamp, timestamp))
 
+        # Removing the uploaded archive
         run('sudo rm /tmp/web_static_{}.tgz'.format(timestamp))
 
-        run('sudo mv /data/web_static/releases/web_static_{}/web_static/* \
-/data/web_static/releases/web_static_{}/'.format(timestamp, timestamp))
+        # Moving contents to the parent folder and removing inner folder
+        run('sudo mv /data/web_static/releases/web_static_{}/web_static/* '
+            '/data/web_static/releases/web_static_{}/'.format(timestamp, timestamp))
 
-        run('sudo rm -rf /data/web_static/releases/\
-web_static_{}/web_static'
-            .format(timestamp))
+        # Removing the inner web_static folder
+        run('sudo rm -rf /data/web_static/releases/web_static_{}/web_static'.format(timestamp))
 
+        # Removing the old symbolic link
         run('sudo rm -rf /data/web_static/current')
 
-        run('sudo ln -s /data/web_static/releases/\
-web_static_{}/ /data/web_static/current'.format(timestamp))
-    except:
+        # Creating a new symbolic link
+        run('sudo ln -s /data/web_static/releases/web_static_{}/ /data/web_static/current'.format(timestamp))
+    except Exception as e:
+        print("Error: {}".format(e))
         return False
 
     return True
